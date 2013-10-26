@@ -1,1 +1,5 @@
-Hello World!
+Linked-List
+============
+This structure stores ordered non-equal values.
+The order can be change through traits.
+
