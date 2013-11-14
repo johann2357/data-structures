@@ -13,46 +13,6 @@ template <typename T>
 class ListIterator;
 
 template <typename T>
-struct SMNode;
-
-template <typename T>
-struct SMNode
-{
-  typedef List<T> list;
-  typedef LNode<T> node;
-  typedef SMNode<T> self;
-  list* list1_;
-  list* list2_;
-  T zero_;
-  int coord1_;
-  int coord2_;
-  SMNode(list* pl1, list* pl2, int coord1, int coord2, T zero)
-  {
-    list1_ = pl1;
-    list2_ = pl2;
-    zero_ = zero;
-    coord1_ = coord1;
-    coord2_ = coord2;
-  }
-  virtual ~SMNode() {}
-  operator T ()
-  {
-    node** tmp;
-    if (list1_->find(coord1_, tmp))
-      return (*tmp)->data_;
-    return zero_;
-  }
-  self& operator= (const T& x)
-  {
-    if (x == zero_)
-      list1_->remove(coord1_, coord2_, list2_);
-    else
-      list1_->insert(x, coord1_, coord2_, list2_);
-    return (*this);
-  }
-};
-
-template <typename T>
 class LNode
 {
  public:
@@ -86,13 +46,18 @@ class List
   }
   virtual ~List()
   {
-    node* t;
-    while (head_)
+    if (dir_)
     {
-      t = head_->next_[dir_];
-      delete head_;
-      head_ = t;
+      node* t;
+      while (head_)
+      {
+        t = head_->next_[dir_];
+        delete head_;
+        head_ = t;
+      }
     }
+    else
+      head_ = NULL;
   }
   bool find(int c, node**& p) 
   {
@@ -101,7 +66,7 @@ class List
       p = &(*p)->next_[dir_];
     return ((*p != NULL) && ((*p)->coord_[dir_] == c));
   }
-  bool insert(T x, int current, int other_coord, self* other)
+  bool insert(T x, int other_coord, int current, self* other)
   {
     node** cp;
     if (find(other_coord, cp))
@@ -113,15 +78,17 @@ class List
     other->find(current, op);
     node* tmp = (*cp);
     (*cp) = new node (x);
-    (*cp)->coord_[dir_] = current;
-    (*cp)->coord_[!dir_] = other_coord;
+    (*cp)->coord_[!dir_] = current;
+    (*cp)->coord_[dir_] = other_coord;
     (*cp)->next_[dir_] = tmp;
     tmp = (*op);
     (*cp)->next_[!dir_] = tmp;
-    ++size_;
+    (*op) = (*cp);
+    ++(*this);
+    ++(*other);
     return true;
   }
-  bool remove(int current, int other_coord, self* other)
+  bool remove(int other_coord, int current, self* other)
   {
     node** cp;
     if (!find(other_coord, cp))
@@ -132,16 +99,25 @@ class List
     (*cp) = (*cp)->next_[dir_];
     (*op) = (*op)->next_[!dir_];
     delete tmp;
-    --size_;
+    --(*this);
+    --(*other);
     return true;
   }
   unsigned int size()
   {
     return size_;
   }
+  void operator++()
+  {
+    ++size_;
+  }
+  void operator--()
+  {
+    --size_;
+  }
   iterator begin()
   {
-    iterator tmp(head_);
+    iterator tmp(head_, dir_);
     return tmp;
   }
   iterator end()
@@ -155,11 +131,13 @@ class ListIterator
 {
   typedef ListIterator<T> self;
   typedef LNode<T> node;
+  int ldir_;
   node* i_;
 public:
-  ListIterator(node* p=NULL)
+  ListIterator(node* p=NULL, int dir=0)
   {
     i_ =  p;
+    ldir_ = dir;
   }
   ListIterator(const self& ci)
   {
@@ -168,6 +146,7 @@ public:
   self& operator= (const self& i)
   {
     i_ = i.i_;
+    ldir_ = i.ldir_;
     return *this;
   }
   bool operator!= (self i)
@@ -184,7 +163,7 @@ public:
   }
   self& operator++ ()
   {
-    i_ = i_->next_;
+    i_ = i_->next_[ldir_];
     return *this;
   }
   self operator++ (int)
@@ -195,7 +174,10 @@ public:
   }
   friend std::ostream& operator<<(std::ostream& out, const self& x)
   {
-    std::cout << x.i_;
+    std::cout << "\tdata: " << x.i_->data_;
+    std::cout << "\ncoord 0: " << x.i_->coord_[0];
+    std::cout << "\ncoord 1: " << x.i_->coord_[1];
+    std::cout << "\n";
   }
 };
 
