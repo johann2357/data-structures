@@ -4,6 +4,55 @@
 #include <iostream>
 
 template <typename T>
+class LNode;
+
+template <typename T>
+class List;
+
+template <typename T>
+class ListIterator;
+
+template <typename T>
+struct SMNode;
+
+template <typename T>
+struct SMNode
+{
+  typedef List<T> list;
+  typedef LNode<T> node;
+  typedef SMNode<T> self;
+  list* list1_;
+  list* list2_;
+  T zero_;
+  int coord1_;
+  int coord2_;
+  SMNode(list* pl1, list* pl2, int coord1, int coord2, T zero)
+  {
+    list1_ = pl1;
+    list2_ = pl2;
+    zero_ = zero;
+    coord1_ = coord1;
+    coord2_ = coord2;
+  }
+  virtual ~SMNode() {}
+  operator T ()
+  {
+    node** tmp;
+    if (list1_->find(coord1_, tmp))
+      return (*tmp)->data_;
+    return zero_;
+  }
+  self& operator= (const T& x)
+  {
+    if (x == zero_)
+      list1_->remove(coord1_, coord2_, list2_);
+    else
+      list1_->insert(x, coord1_, coord2_, list2_);
+    return (*this);
+  }
+};
+
+template <typename T>
 class LNode
 {
  public:
@@ -19,17 +68,15 @@ class LNode
   virtual ~LNode() {}
 };
 
-template <typename T>
-class ListIterator;
 
 template <typename T>
 class List
 {
   typedef List<T> self;
   typedef LNode<T> node;
+ public:
   bool dir_;
   unsigned int size_;
- public:
   node* head_;
   typedef ListIterator<T> iterator;
   List(bool d=true): dir_(d)
@@ -47,25 +94,27 @@ class List
       head_ = t;
     }
   }
-  node** find(int c) 
+  bool find(int c, node**& p) 
   {
-    node** p = NULL;
     p = &head_;
-    while ( *p && ((*p)->cood_[dir_] < c))
+    while ( (*p) && ((*p)->coord_[dir_] < c))
       p = &(*p)->next_[dir_];
-    return p;
+    return ((*p != NULL) && ((*p)->coord_[dir_] == c));
   }
   bool insert(T x, int current, int other_coord, self* other)
   {
-    node** cp = find(other_coord);
-    if ( ((*cp) != NULL) && ((*cp)->coord_[dir_] == other_coord) )
+    node** cp;
+    if (find(other_coord, cp))
     {
-      (*cp)->data = x;
+      (*cp)->data_ = x;
       return false;
     }
-    node** op = other->find(current);
+    node** op;
+    other->find(current, op);
     node* tmp = (*cp);
     (*cp) = new node (x);
+    (*cp)->coord_[dir_] = current;
+    (*cp)->coord_[!dir_] = other_coord;
     (*cp)->next_[dir_] = tmp;
     tmp = (*op);
     (*cp)->next_[!dir_] = tmp;
@@ -74,10 +123,11 @@ class List
   }
   bool remove(int current, int other_coord, self* other)
   {
-    node** cp = find(other_coord);
-    if ( ((*cp) != NULL) && ((*cp)->coord_[dir_] != other_coord) )
+    node** cp;
+    if (!find(other_coord, cp))
       return false;
-    node** op = other->find(current);
+    node** op;
+    other->find(current, op);
     node* tmp = (*cp);
     (*cp) = (*cp)->next_[dir_];
     (*op) = (*op)->next_[!dir_];
