@@ -13,61 +13,30 @@ class SmartPtr
   }
   SmartPtr(T* ptr)
   {
-    if (data_)
-    {
-      if (GCTable[data_] == 1)
-        delete data_;
-      GCTable[data_] -= 1;
-    }
     data_ = ptr;
-    if (ptr)
-      GCTable[data_] += 1;
+    increment();
   }
   SmartPtr(const self& sp)
   {
-    if (data_)
-    {
-      if (GCTable[data_] == 1)
-        delete data_;
-      GCTable[data_] -= 1;
-    }
     data_ = sp.data_;
-    if (data_)
-      GCTable[data_] += 1;
+    increment();
   }
   virtual ~SmartPtr()
   {
-    if (data_)
-    {
-      if (GCTable[data_] == 1)
-        delete data_;
-      GCTable[data_] -= 1;
-    }
+    decrement();
   }
   self& operator = (T* ptr)
   {
-    if (data_)
-    {
-      if (GCTable[data_] == 1)
-        delete data_;
-      GCTable[data_] -= 1;
-    }
+    decrement();
     data_ = ptr;
-    if (ptr)
-      GCTable[data_] += 1;
+    increment();
     return (*this);
   }
   self& operator = (const self& sp)
   {
-    if (data_)
-    {
-      if (GCTable[data_] == 1)
-        delete data_;
-      GCTable[data_] -= 1;
-    }
+    decrement();
     data_ = sp.data_;
-    if (data_)
-      GCTable[data_] += 1;
+    increment();
     return (*this);
   }
   Element<T> operator * ()
@@ -81,6 +50,21 @@ class SmartPtr
   friend std::ostream& operator<<(std::ostream& out, const self& x)
   {
     std::cout << x.data_;
+  }
+ private:
+  void increment()
+  {
+    if (data_)
+      ++GCTable[data_];
+  }
+  void decrement()
+  {
+    if (data_)
+    {
+      if (GCTable[data_] == 1)
+        delete data_;
+      --GCTable[data_];
+    }
   }
 };
 
