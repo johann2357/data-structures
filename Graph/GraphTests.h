@@ -5,6 +5,7 @@
 #include "debug.h"
 #include "Graph.h"
 #include "Dijkstra.h"
+#include "Traversal.h"
 
 struct GraphUnitTest
 {
@@ -114,6 +115,60 @@ struct GraphUnitTest
        Debug( (*i)->get() );
     Debug("-------------");
   }
+  void test_DFS()
+  {
+    typedef Graph<char, int> graph;
+    typedef graph::node node;
+    typedef DFS<graph> dfs;
+    graph test;
+    assert(test.insert_node('A')==true);
+    assert(test.insert_node('B')==true);
+    assert(test.insert_node('C')==true);
+    assert(test.insert_node('X')==true);
+    assert(test.insert_node('Y')==true);
+    assert(test.insert_node('Z')==true);
+    assert(test.insert_edge(1, test.find('A'), test.find('A'))==true);
+    assert(test.insert_edge(1, test.find('A'), test.find('B'))==true);
+    assert(test.insert_edge(1, test.find('A'), test.find('C'))==true);
+    assert(test.insert_edge(1, test.find('B'), test.find('C'))==true);
+    assert(test.insert_edge(1, test.find('B'), test.find('X'))==true);
+    assert(test.insert_edge(1, test.find('C'), test.find('X'))==true);
+    assert(test.insert_edge(1, test.find('C'), test.find('Y'))==true);
+    assert(test.insert_edge(1, test.find('X'), test.find('Z'))==true);
+    assert(test.insert_edge(1, test.find('Y'), test.find('Z'))==true);
+    test.print();
+    Debug("\n-------------");
+    dfs dfs_test;
+    dfs_test (test.find('A'));
+    Debug("-------------");
+  }
+  void test_BFS()
+  {
+    typedef Graph<char, int> graph;
+    typedef graph::node node;
+    typedef BFS<graph> bfs;
+    graph test;
+    assert(test.insert_node('A')==true);
+    assert(test.insert_node('B')==true);
+    assert(test.insert_node('C')==true);
+    assert(test.insert_node('X')==true);
+    assert(test.insert_node('Y')==true);
+    assert(test.insert_node('Z')==true);
+    assert(test.insert_edge(1, test.find('A'), test.find('A'))==true);
+    assert(test.insert_edge(1, test.find('A'), test.find('B'))==true);
+    assert(test.insert_edge(1, test.find('A'), test.find('C'))==true);
+    assert(test.insert_edge(1, test.find('B'), test.find('C'))==true);
+    assert(test.insert_edge(1, test.find('B'), test.find('X'))==true);
+    assert(test.insert_edge(1, test.find('C'), test.find('X'))==true);
+    assert(test.insert_edge(1, test.find('C'), test.find('Y'))==true);
+    assert(test.insert_edge(1, test.find('X'), test.find('Z'))==true);
+    assert(test.insert_edge(1, test.find('Y'), test.find('Z'))==true);
+    test.print();
+    Debug("\n-------------");
+    bfs bfs_test;
+    bfs_test (test.find('A'));
+    Debug("-------------");
+  }
   void run()
   {
     Debug("\nTEST INSERTION");
@@ -124,6 +179,10 @@ struct GraphUnitTest
     test_node_removal();
     Debug("\nTEST DIJKSTRA");
     test_dijkstra();
+    Debug("\nTEST DFS");
+    test_DFS();
+    Debug("\nTEST BFS");
+    test_BFS();
   }
 };
 
